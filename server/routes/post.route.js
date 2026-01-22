@@ -19,11 +19,13 @@ const {
   getSavedPosts,
   clearPendingPosts,
 } = require("../controllers/post.controller");
+
 const {
   postValidator,
   commentValidator,
   validatorHandler,
 } = require("../middlewares/post/userInputValidator");
+
 const {
   createPostLimiter,
   likeSaveLimiter,
@@ -44,12 +46,29 @@ router.use(tokenFromQuery);
 
 router.use(requireAuth, decodeToken);
 
+/**
+ * =========================
+ * GET ROUTES (ORDER MATTERS)
+ * =========================
+ */
+
+// ✅ Route mới rõ ràng: lấy posts của 1 user bằng query
+// GET /posts/public-user-posts?publicUserId=...&access_token=...
+router.get("/public-user-posts", getPublicPosts);
+
+// GET /posts/community/:communityId
 router.get("/community/:communityId", getCommunityPosts);
+
+// GET /posts/saved
 router.get("/saved", getSavedPosts);
+
+// GET /posts/:publicUserId/userPosts
 router.get("/:publicUserId/userPosts", getPublicPosts);
+
+// GET /posts/:id/following
 router.get("/:id/following", getFollowingUsersPosts);
-router.get("/:id", getPost);
-// Query-string version (recommended):
+
+// ✅ Dispatcher cho query-string filter
 // GET /posts?communityId=...&limit=10&skip=0
 // GET /posts?saved=true
 // GET /posts?publicUserId=...
@@ -89,6 +108,16 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+// ✅ Route động /:id phải đặt SAU / và SAU các route cụ thể
+// GET /posts/:id
+router.get("/:id", getPost);
+
+/**
+ * ===========
+ * POST ROUTES
+ * ===========
+ */
+
 router.post("/confirm/:confirmationToken", confirmPost);
 router.post("/reject/:confirmationToken", rejectPost);
 
@@ -113,8 +142,20 @@ router.post(
   createPost,
 );
 
+/**
+ * =============
+ * DELETE ROUTES
+ * =============
+ */
+
 router.delete("/pending", clearPendingPosts);
 router.delete("/:id", deletePost);
+
+/**
+ * ============
+ * PATCH ROUTES
+ * ============
+ */
 
 router.use(likeSaveLimiter);
 

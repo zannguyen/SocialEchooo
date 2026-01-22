@@ -615,15 +615,23 @@ const getSavedPosts = async (req, res) => {
 const getPublicPosts = async (req, res) => {
   try {
     const publicUserId = req.params.publicUserId || req.query.publicUserId;
-
     const currentUserId = req.userId;
+
+    if (!publicUserId) {
+      return res.status(400).json({ message: "Missing publicUserId" });
+    }
 
     const isFollowing = await Relationship.exists({
       follower: currentUserId,
       following: publicUserId,
     });
+
     if (!isFollowing) {
-      return null;
+      return res.status(403).json({
+        message: "You must follow this user to view their posts.",
+      });
+      // hoặc nếu muốn trả rỗng:
+      // return res.status(200).json([]);
     }
 
     const commonCommunityIds = await Community.find({
@@ -638,16 +646,17 @@ const getPublicPosts = async (req, res) => {
       .populate("community", "_id name")
       .sort("-createdAt")
       .limit(10)
-      .exec();
+      .lean();
 
     const formattedPosts = publicPosts.map((post) => ({
-      ...post.toObject(),
+      ...post,
       createdAt: dayjs(post.createdAt).fromNow(),
     }));
 
-    res.status(200).json(formattedPosts);
+    return res.status(200).json(formattedPosts);
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    console.error("getPublicPosts error:", error); // ✅ để thấy lỗi thật
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
