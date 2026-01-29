@@ -63,6 +63,55 @@ const createPost = async (req, res) => {
   }
 };
 
+// controllers/post.controller.js
+
+const createPostByUrl = async (req, res) => {
+  try {
+    const { communityId, content, fileUrl, fileType } = req.query;
+    const userId = req.userId;
+
+    if (!communityId || !content) {
+      return res.status(400).json({
+        message: "communityId and content are required",
+      });
+    }
+
+    const community = await Community.findOne({
+      _id: communityId,
+      members: userId,
+    });
+
+    if (!community) {
+      return res.status(401).json({
+        message: "Unauthorized to post in this community",
+      });
+    }
+
+    const newPost = new Post({
+      user: userId,
+      community: communityId,
+      content,
+      fileUrl: fileUrl || null,
+      fileType: fileType || null,
+    });
+
+    const savedPost = await newPost.save();
+
+    const post = await Post.findById(savedPost._id)
+      .populate("user", "name avatar")
+      .populate("community", "name")
+      .lean();
+
+    post.createdAt = dayjs(post.createdAt).fromNow();
+
+    return res.status(201).json(post);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error creating post by url",
+    });
+  }
+};
+
 const confirmPost = async (req, res) => {
   try {
     const { confirmationToken } = req.params;
@@ -664,6 +713,7 @@ module.exports = {
   getPost,
   getPosts,
   createPost,
+  createPostByUrl,
   getCommunityPosts,
   deletePost,
   rejectPost,

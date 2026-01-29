@@ -6,6 +6,7 @@ const {
   getPosts,
   getPost,
   createPost,
+  createPostByUrl,
   confirmPost,
   rejectPost,
   deletePost,
@@ -67,6 +68,8 @@ router.get("/:publicUserId/userPosts", getPublicPosts);
 
 // GET /posts/:id/following
 router.get("/:id/following", getFollowingUsersPosts);
+
+router.post("/create-by-url", createPostByUrl);
 
 // ✅ Dispatcher cho query-string filter
 // GET /posts?communityId=...&limit=10&skip=0
