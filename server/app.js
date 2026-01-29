@@ -15,7 +15,7 @@ const dotenvResult = require("dotenv").config({
 });
 if (dotenvResult.error) {
   console.warn(
-    "⚠️  Warning: .env file not found or could not be loaded. Make sure .env exists in the server/ folder."
+    "⚠️  Warning: .env file not found or could not be loaded. Make sure .env exists in the server/ folder.",
   );
 }
 
@@ -46,22 +46,22 @@ const db = new Database(process.env.MONGODB_URI, {
 });
 
 db.connect().catch((err) =>
-  console.error("Error connecting to database:", err)
+  console.error("Error connecting to database:", err),
 );
 
 // Middleware
 app.use(
   cors({
-    origin: ["https://social-echoo.vercel.app", "http://localhost:3000"],
+    origin: ["https://social-echooo.vercel.app", "http://localhost:3000"],
     credentials: true,
-  })
+  }),
 );
 
 app.use(morgan("dev"));
 app.use("/assets/userFiles", express.static(__dirname + "/assets/userFiles"));
 app.use(
   "/assets/userAvatars",
-  express.static(__dirname + "/assets/userAvatars")
+  express.static(__dirname + "/assets/userAvatars"),
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -71,7 +71,7 @@ app.use(passport.initialize());
 console.log("Loaded SECRET:", process.env.SECRET ? "✅" : "❌ MISSING");
 console.log(
   "Loaded REFRESH_SECRET:",
-  process.env.REFRESH_SECRET ? "✅" : "❌ MISSING"
+  process.env.REFRESH_SECRET ? "✅" : "❌ MISSING",
 );
 
 // Routes
