@@ -52,7 +52,7 @@ db.connect().catch((err) =>
 // Middleware
 app.use(
   cors({
-    origin: ["https://social-echooo.vercel.app/", "http://localhost:3000"],
+    origin: "*",
     credentials: true,
   }),
 );
