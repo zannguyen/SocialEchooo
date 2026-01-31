@@ -11,6 +11,7 @@ const Relationship = require("../models/relationship.model");
 const Report = require("../models/report.model");
 const PendingPost = require("../models/pendingPost.model");
 const fs = require("fs");
+const jwt = require("jsonwebtoken");
 
 const createPost = async (req, res) => {
   try {
@@ -63,16 +64,47 @@ const createPost = async (req, res) => {
   }
 };
 
-// controllers/post.controller.js
-
 const createPostByUrl = async (req, res) => {
   try {
-    const { communityId, content, fileUrl, fileType } = req.query;
-    const userId = req.userId;
+    const { access_token, communityId, content, fileUrl, fileType } = req.query;
 
-    if (!communityId || !content) {
+    // 1. kiểm tra access_token
+    if (!access_token) {
+      return res.status(401).json({
+        code: 1,
+        message: "Invalid or missing access_token",
+      });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(access_token, process.env.SECRET);
+    } catch (err) {
+      return res.status(401).json({
+        code: 10,
+        message: "Invalid or missing access_token",
+      });
+    }
+
+    const userId = decoded.id;
+    if (!communityId) {
       return res.status(400).json({
-        message: "communityId and content are required",
+        code: 2,
+        message: "Missing communityId",
+      });
+    }
+
+    if (!content) {
+      return res.status(400).json({
+        code: 3,
+        message: "Missing content",
+      });
+    }
+
+    if (fileType && !["image", "video"].includes(fileType)) {
+      return res.status(400).json({
+        code: 5,
+        message: "Invalid fileType",
       });
     }
 
@@ -82,8 +114,9 @@ const createPostByUrl = async (req, res) => {
     });
 
     if (!community) {
-      return res.status(401).json({
-        message: "Unauthorized to post in this community",
+      return res.status(403).json({
+        code: 4,
+        message: "User is not a member of this community",
       });
     }
 
@@ -104,10 +137,15 @@ const createPostByUrl = async (req, res) => {
 
     post.createdAt = dayjs(post.createdAt).fromNow();
 
-    return res.status(201).json(post);
+    return res.status(201).json({
+      code: 0,
+      data: post,
+    });
   } catch (error) {
+    console.error("createPostByUrl error:", error);
     return res.status(500).json({
-      message: "Error creating post by url",
+      code: 6,
+      message: "Internal server error",
     });
   }
 };
